@@ -1,0 +1,177 @@
+Segment Trees
+-------------
+
+when to use: 
+1 ---> To find min/max value in an range [l, r] when given q queries 
+Bruteforce ---> q * (r-l+1) ---> q * N [worst case] 
+
+Def: Segment Tree is a data structure which gives the range query in log(time) 
+---
+
+		
+	ind 
+
+   2*ind+1   2*ind+2
+
+
+
+
+2 ---> Take the size as 4*n (seg[4*n]) ---> It works for all cases
+
+// Building Segment Tree
+seq[4*n]
+
+void f(ind, low, high){
+    if(low == high){
+	seq[low] = arr[low] ; 
+	return ; 
+    }
+
+    int mid = (low + high)/2 ; 
+    f(2*ind+1, low, mid) ; 
+    f(2*ind+2, mid+1, high) ; 
+
+    seq[ind] = min(seq[2*mid+1], seq[2*mid+2]) ;
+}
+
+
+// Time Complexity
+// O(4*n) ===> logically tc is equal to number of nodes visited 
+// At worst case, the nodes are 4*n 
+
+
+
+3 ---> Queries 
+
+min(L, R) 
+
+a ---> partial overlap of nodes with range(L, R)
+
+call left node
+call right node 
+return min(left, right) 
+ 
+b ---> What is there is no overlap with the range(L, R) 
+
+return INT_MAX [for finding min in range]
+return INT_MIN [for finding max in range]
+
+c ---> complete overlap with (L, R)
+
+return seg[ind] 
+
+
+// Time Complexity
+(l r) -> small range  [Most of the nodes will be no overlap] ---> O(log n) 
+(l r) -> high range [Most of the nodes is complete overlap] ---> O(log n) 
+(l r) -> medium range ---> O(2log n   or 3log n   or 4log n) ---> O(log n)  
+
+
+
+query(ind, low, high, l, r){
+    
+    // case 1 ---> no overlap 
+    //   [l r] [low high]   (or)  [low high] [l r]
+
+    if(high < l or r < low){
+	return INT_MAX ; // (for finding min in range)
+	return INT_MIN ; // (for finding max in range) 
+    } 
+
+    // case 2 ---> complete overlap
+    //   [l low high r] 
+    
+    if(l <= low && high <= r){
+	return seg[ind] ;
+    }
+
+    // case 3 ---> partial overlap
+    //   [low l high r]  (or)  [l low r high] 
+
+    int mid = (low + high)/2 ; 
+    int left = query(2*ind+1, low, mid, l, r) ; 
+    int right = query(2*ind+2, mid+1, right, l, r) ; 
+    return seg[ind] = min(left, right) ; 
+
+}
+
+
+
+Point Update
+------------
+Usecase:  Given an array arr=[2, 1, 0, 3, 5, 4]
+There are 2 types of queries 
+Type 1: given me the min in the range (l, r)
+Type 2: update the val in the ind (ind, val) 
+
+
+update(ind, low, high, i, val){
+    if(low == high){
+	seg[ind] = val ; 
+        return ; 
+    }
+
+    int mid = (low + high)/2 ; 
+    if(i <= mid) {
+	update(2*ind+1, low, mid, i, val) 
+    } else {
+	update(2*ind+2, mid+1, high, i, val) 
+    } 
+
+    seg[ind] = min(seg[2*ind+1], seg[2*ind+2]) ; 
+}
+
+
+
+
+Example: https://codeforces.com/contest/339/problem/D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Range Updates
+-------------
+update +val from range l to r 
+
+Time Complexity:  [r-l+1] * log (N) 
+
+This is where lazy propagation comes into play. 
+
+
+Lazy Propagation on Segment Trees
+---------------------------------
+---> Update the node when you visit it 
+---> Once you update, propagate the update downwards
+
+
+
+
+1 ---> We will create one more node for every node in the segment tree [lazy node] 
+
+
+
+How Range updates will be handled ? 
+
+---> Traverse in the segment tree [When you are traversing, update previous remaining updates]
+	----> check if the node completely overlaps with (L,R) 
+	      ---> Update the node 
+              ---> Lazy propagate downwards	
+	      ---> return 
+
+        ----> check if the node partially overlaps 
+	      ---> call left 
+              ---> call right
+	      ---> node = left + right  
+
+	----> No overlaps
+	      ---> return 
